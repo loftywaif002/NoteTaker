@@ -58,7 +58,7 @@ def create_note(payload: NoteCreate, db: Session = Depends(get_db)):
     index_note(
         note_id=note.id,
         text=f"{note.title}\n\n{note.content}",
-        metadata={"tags": tags}
+        metadata={"tags": json.dumps(tags)}  # :point_left: JSON-encode the list
     )
     return _note_to_out(note)
 
