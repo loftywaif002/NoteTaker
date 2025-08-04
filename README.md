@@ -18,13 +18,24 @@ Simple CRUD app using MCP, Langchain, FastApi
 }
 ```
 
-### Fast-Api server
+#### UseFul Commands
 
-```pip install fastapi uvicorn sqlalchemy pydantic[dotenv] requests```
+```
+uv venv .venv --python=3.12.11
+Creates a venv with specified Python version
+uv pip install -r requirements.txt
+Installs packages into your uv venv
+uv run uvicorn main:app --reload
+Runs your FastAPI app inside the uv venv
+uv sync --activate
 
-# create .env based on .env.example, then:
-```uvicorn main:app --reload --port 8000```
+```
 
+# Run Fast-API Server:
+```uv run uvicorn main:app --reload --port 8000```
+
+# Run MCP Server:
+```uv run uvicorn main:app --reload --port 8001```
 
 ### MCP Server
 
