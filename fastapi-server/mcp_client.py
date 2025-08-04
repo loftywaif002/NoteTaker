@@ -19,17 +19,22 @@ def _safe_post(path: str, payload: dict):
         log.warning("MCP call failed: %s", e)
         return None
 
-def summarize_and_tag(text: str):
+def summarize_and_tag_stream(text: str):
     """
-    Expected MCP /summarize response: { "summary": str, "tags": [str, ...] }
+    Calls MCP /summarize and streams the JSON line by line.
     """
     resp = _safe_post("/summarize", {"text": text})
     if isinstance(resp, dict):
-        return {
-            "summary": resp.get("summary"),
-            "tags": resp.get("tags") or []
-        }
-    return {"summary": None, "tags": []}
+        def stream():
+            yield "{\n"
+            yield f'  "summary": "{resp.get("summary", "").replace("\"", "\\\"")}",\n'
+            yield f'  "tags": {json.dumps(resp.get("tags") or [])}\n'
+            yield "}\n"
+        return stream()
+    def fallback_stream():
+        yield '{"summary": null, "tags": []}'
+    return fallback_stream()
+
 
 def index_note(note_id: str, text: str, metadata: Optional[Dict] = None):
     """

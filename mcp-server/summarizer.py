@@ -1,9 +1,10 @@
 from ollama import Client
-import json
+from fastapi.responses import StreamingResponse
+
 
 client = Client(host='http://localhost:11434')
 
-def summarize_and_tag(text: str) -> dict:
+def summarize_and_tag_stream(text: str):
     prompt = f"""
     Summarize this and generate 3 tags as a JSON:
     \"\"\"
@@ -15,21 +16,18 @@ def summarize_and_tag(text: str) -> dict:
       "tags": ["tag1", "tag2", "tag3"]
     }}
     """
-    try:
-        response = client.chat(model='llama2', messages=[
-            {"role": "user", "content": prompt}
-        ])
-        content = response.get("message", {}).get("content", "").strip()
-        # Debug print for inspection (optional)
-        print("Ollama raw content:\n", content)
-        # Try parsing JSON from the string
-        return json.loads(content)
-    except (json.JSONDecodeError, KeyError, TypeError) as e:
-        print(f"Error parsing response: {e}")
-        return {
-            "summary": "",
-            "tags": [],
-            "error": "Invalid response format from model"
-        }
-
-
+    def generate():
+        try:
+            stream = client.chat(
+                model='llama2',
+                messages=[{"role": "user", "content": prompt}],
+                stream=True
+            )
+            print("stream", stream)
+            for chunk in stream:
+                content = chunk.get("message", {}).get("content", "")
+                if content:
+                    yield content
+        except Exception as e:
+            yield f'\n[Error]: {str(e)}'
+    return StreamingResponse(generate(), media_type="text/plain")

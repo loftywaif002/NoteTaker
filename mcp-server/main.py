@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from schemas import *
-from summarizer import summarize_and_tag
+from summarizer import summarize_and_tag_stream
 from vectorstore import index_note, delete_note, search
 
 app = FastAPI()
@@ -9,10 +9,9 @@ app = FastAPI()
 def health():
     return {"status": "ok"}
 
-@app.post("/summarize", response_model=SummarizeResponse)
-def summarize(req: SummarizeRequest):
-    result = summarize_and_tag(req.text)
-    return SummarizeResponse(**result)
+@app.post("/summarize")
+def summarize(payload: SummarizeRequest):
+    return summarize_and_tag_stream(payload.text)  # returns StreamingResponse
 
 @app.post("/index")
 def index(req: IndexRequest):

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from models import Note
 from schemas import NoteCreate, NoteOut, NoteUpdate
 from database import get_db
-from mcp_client import summarize_and_tag, index_note, delete_note_index, semantic_search
+from mcp_client import summarize_and_tag_stream, index_note, delete_note_index, semantic_search
 from config import settings
 import json
 
@@ -37,7 +38,7 @@ def _note_to_out(note: Note) -> NoteOut:
 
 @router.post("/notes", response_model=NoteOut, status_code=status.HTTP_201_CREATED)
 
-def create_note(payload: NoteCreate, db: Session = Depends(get_db)):
+def create_note_stream(payload: NoteCreate, db: Session = Depends(get_db)):
     summary = None
     tags = payload.tags or []
     if settings.AUTOSUMMARIZE_ON_CREATE and payload.auto_summarize:
@@ -61,6 +62,15 @@ def create_note(payload: NoteCreate, db: Session = Depends(get_db)):
         metadata={"tags": json.dumps(tags)}  # :point_left: JSON-encode the list
     )
     return _note_to_out(note)
+
+
+@router.post("/notes/stream", status_code=status.HTTP_201_CREATED)
+def create_note_stream(payload: NoteCreate):
+    text = f"{payload.title}\n\n{payload.content}"
+    return StreamingResponse(
+        summarize_and_tag_stream(text),
+        media_type="text/plain"
+    )
 
 @router.get("/notes", response_model=List[NoteOut])
 def list_notes(
