@@ -102,3 +102,14 @@ Why It Matters
 -- Scalability
 
 - Can run MCP separately and scale it for heavy compute usage
+
+### INSTALL and Run Model Locally
+
+``` brew install ollama ```
+
+### TAB - 1
+``` ollama serve ```
+
+### TAB - 2
+
+``` ollama pull llama2 ```
