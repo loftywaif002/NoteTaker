@@ -23,7 +23,6 @@ def summarize_and_tag_stream(text: str):
                 messages=[{"role": "user", "content": prompt}],
                 stream=True
             )
-            print("stream", stream)
             for chunk in stream:
                 content = chunk.get("message", {}).get("content", "")
                 if content:

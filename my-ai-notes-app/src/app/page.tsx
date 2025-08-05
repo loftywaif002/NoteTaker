@@ -11,37 +11,36 @@ export default function Home() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [result, setResult] = useState< any | null>(null)
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    setResult(""); // Reset
-    try {
-      const res = await fetch("/api/notes", {
-        method: "POST",
-        body: JSON.stringify({ title, content, tags: [], auto_summarize: true }),
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      if (data.summary) {
-        const summary = data.summary;
-        let index = 0;
-        const typeNextChar = () => {
-          if (index < summary.length) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            setResult((prev: any) => prev + summary[index]);
-            index++;
-            setTimeout(typeNextChar, 40);
-          }
-        };
-        typeNextChar();
+const handleSubmit = async () => {
+  setLoading(true);
+  setResult(""); // Reset
+  try {
+    const res = await fetch("/api/notes", {
+      method: "POST",
+      body: JSON.stringify({ title, content, tags: [], auto_summarize: true }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    const final_data = (typeof data?.summary === 'string' && data.summary.length > 0)
+      ? data.summary
+      : "Sorry, model returned an empty response.";
+    let index = 0;
+    const typeNextChar = () => {
+      if (index < final_data.length) {
+        const char = final_data[index];
+        index++;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setResult((prev: any) => prev + (char || ''));
+        setTimeout(typeNextChar, 40);
       }
-      // Optional: display tags too
-      // setTags(data.tags || []);
-    } catch (error) {
-      console.error("Error submitting:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    typeNextChar();
+  } catch (error) {
+    console.error("Error submitting:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   return (
